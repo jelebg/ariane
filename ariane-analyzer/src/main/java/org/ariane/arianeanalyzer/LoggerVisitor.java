@@ -147,7 +147,8 @@ public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 			}
 		}
 		catch(Exception e) {
-	    	System.err.println("Exception while resovling MethodCallExpr:"+n.toString()+" in file: " + ctx.filename);
+	    	System.err.println("Exception while resovling MethodCallExpr:"+n.toString()+" in file: " + 
+	    					ctx.filename+"["+n.getBegin().line+"]");
 			e.printStackTrace();
 		}
 		
