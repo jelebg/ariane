@@ -31,7 +31,7 @@ public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 		this.jpf = JavaParserFacade.get(typeSolver);
 	}
 	
-	public void visitFile(String filename) throws FileNotFoundException {
+	public void visitFile(String filename) throws Exception {
 		arianeLogger.logFileVisitBegin(filename);
         CompilationUnit cu;
         try(FileInputStream in = new FileInputStream(filename)) {
@@ -102,13 +102,23 @@ public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 			if(n.getImplements() != null) {
 				for(ClassOrInterfaceType implemented : n.getImplements()) {
 					String implementedName = getCompleteClassNameFromImports(ctx, implemented.getName());
-					arianeLogger.logInheritence(implementedName, className);
+					try {
+						arianeLogger.logInheritence(implementedName, className);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			}
 			if(n.getExtends() != null) {
 				for(ClassOrInterfaceType extended : n.getExtends()) {
 					String extendededName = getCompleteClassNameFromImports(ctx, extended.getName());
-					arianeLogger.logInheritence(extendededName, className);
+					try {
+						arianeLogger.logInheritence(extendededName, className);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			}
 	

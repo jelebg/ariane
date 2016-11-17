@@ -2,6 +2,7 @@ package org.ariane.arianeanalyzer;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitResult;
@@ -22,6 +23,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.ariane.arianeanalyzer.loggers.ConsoleLogger;
+import org.ariane.arianeanalyzer.loggers.CsvLogger;
+import org.ariane.arianeanalyzer.loggers.IArianeLogger;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
@@ -55,7 +58,7 @@ public class ArianeAnalyzerMain
 	private static List<String> skipDirectories = null;
 	private static CombinedTypeSolver typeSolver = null;
 	
-	public static void main( String[] args ) throws IOException {
+	public static void main( String[] args ) throws Exception {
 	
 		Options options = new Options();
 		
@@ -70,6 +73,10 @@ public class ArianeAnalyzerMain
 		Option skipName = new Option("k", "skip", true, "skip name(s)");
 		skipName.setRequired(false);
 		options.addOption(skipName);
+		
+		Option csvName = new Option("c", "csv", true, "csv output nodes and relations files prefixes");
+		csvName.setRequired(false);
+		options.addOption(csvName);
 		
 		CommandLineParser parser = new DefaultParser();
 		HelpFormatter formatter = new HelpFormatter();
@@ -88,6 +95,7 @@ public class ArianeAnalyzerMain
 		String[] jarDirs  = cmd.getOptionValues("jar");
 		String[] srcs  = cmd.getOptionValues("src");
 		String[] skips = cmd.getOptionValues("skip");
+		String csvFilePrefix = cmd.getOptionValue("csv");
 		List<String> jars = new ArrayList<String>();
 		
 		for(String str : jarDirs) {
@@ -132,22 +140,35 @@ public class ArianeAnalyzerMain
 			skipDirectories = Arrays.asList(skips);
 		}
 		
+		IArianeLogger logger = createLogger(csvFilePrefix);
+		logger.init();
 		for(String src : srcs) {
 			File f = new File(src);
 			if(f.isDirectory()) {
-				visitDirectory(src);
+				visitDirectory(src, logger);
 			}
 			else {
-				visitFile(src);
+				visitFile(src, logger);
 			}
 		}
+		logger.end();
 
     }
 	
-	public static void visitFile(String filename) throws IOException {
+	public static IArianeLogger createLogger(String csvPrefix) throws FileNotFoundException {
+		if(csvPrefix == null) {
+			return new ConsoleLogger();
+		}
+		
+		File nodesFile = new File(csvPrefix+".nodes.csv");
+		File relationsFile = new File(csvPrefix+".relations.csv");
+		
+		return new CsvLogger(nodesFile, relationsFile);
+	}
+	
+	public static void visitFile(String filename, IArianeLogger logger) throws IOException {
         try {
         	final JavaParserFacade jpf = JavaParserFacade.get(typeSolver);
-			ConsoleLogger logger = new ConsoleLogger();
 			LoggerVisitor visitor = new LoggerVisitor(logger, typeSolver);
 			visitor.visitFile(filename);
 			
@@ -157,7 +178,7 @@ public class ArianeAnalyzerMain
         } 
 	}
 	
-	public static void visitDirectory(String dir) throws IOException {
+	public static void visitDirectory(String dir, IArianeLogger logger) throws IOException {
 		
 		Files.walkFileTree(Paths.get(dir), 
 				new FileVisitor<Path>() {
@@ -182,7 +203,7 @@ public class ArianeAnalyzerMain
 						}
 						
 						System.out.println("FILE "+file.toString());
-						ArianeAnalyzerMain.visitFile(file.toString());
+						ArianeAnalyzerMain.visitFile(file.toString(), logger);
 						return FileVisitResult.CONTINUE;
 					}
 

@@ -34,5 +34,17 @@ public class ConsoleLogger implements IArianeLogger {
 		
 	}
 
+	@Override
+	public void init() throws Exception {
+		// nothing
+		
+	}
+
+	@Override
+	public void end() throws Exception {
+		// nothing
+		
+	}
+
 
 }
