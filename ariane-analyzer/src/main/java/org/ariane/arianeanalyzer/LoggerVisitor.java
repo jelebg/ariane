@@ -20,6 +20,10 @@ import com.github.javaparser.symbolsolver.model.declarations.TypeDeclaration;
 import com.github.javaparser.symbolsolver.model.declarations.ValueDeclaration;
 import com.github.javaparser.symbolsolver.model.resolution.SymbolReference;
 import com.github.javaparser.symbolsolver.model.resolution.TypeSolver;
+import com.github.javaparser.symbolsolver.model.typesystem.ArrayType;
+import com.github.javaparser.symbolsolver.model.typesystem.PrimitiveType;
+import com.github.javaparser.symbolsolver.model.typesystem.ReferenceType;
+import com.github.javaparser.symbolsolver.model.typesystem.Type;
 
 public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 	IArianeLogger arianeLogger;
@@ -48,6 +52,40 @@ public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 		arianeLogger.logFileVisitEnd(filename);
 	}
 	
+	/*public String getCompleteClassNameFromType(Type t) {
+		//TODO : gerer les generics
+		String name = null;
+		if(t.isArray()) {
+			ArrayType arrayType = t.asArrayType();
+			Type t2 = arrayType.getComponentType();
+			name = getCompleteClassNameFromType(t2)+"[]";
+		}
+		else if(t.isNull()) {
+			throw new UnsupportedOperationException("getCompleteClassNameFromType for null");
+		}
+		else if(t.isPrimitive()) {
+			//PrimitiveType primitiveType = t.asPrimitive();
+			throw new UnsupportedOperationException("getCompleteClassNameFromType for PrimitiveType");
+		}
+		else if(t.isReference()) {
+			ReferenceType referenceType = t.asReferenceType();
+			referenceType.
+		}
+		else if(t.isReferenceType()) {
+		}
+		else if(t.isTypeVariable()) {
+			throw new UnsupportedOperationException("getCompleteClassNameFromType for TypeParameter");
+		}
+		else if(t.isVoid()) {
+			throw new UnsupportedOperationException("getCompleteClassNameFromType for void");
+		}
+		else if(t.isWildcard())
+			throw new UnsupportedOperationException("getCompleteClassNameFromType for Wildcard");
+		}
+		
+	}*/
+
+	
 	public String getCompleteClassNameFromPackage(VisitorContext ctx, String className) {
 		String packageName = "";
 		if(ctx.compilationUnit.getPackage().isPresent()) {
@@ -55,6 +93,7 @@ public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 		}
 		return packageName+"."+className;
 	}
+	
 	
 	public String getCompleteClassNameFromImports(VisitorContext ctx, String className) {
 		// TODO : gerer sous classe + classe anonymes
@@ -72,7 +111,7 @@ public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 		// TODO : subclasses + classes anonymes
 		// TODO : generics
 		StringBuilder sb = new StringBuilder();
-		sb.append(ctx.getcurrentClassName());
+		sb.append(ctx.getcurrentClass().name);
 		sb.append(".");
 		sb.append(methodDeclaration.getName());
 		sb.append("(");
@@ -97,7 +136,7 @@ public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 	public void visit(ClassOrInterfaceDeclaration n, VisitorContext ctx) {
 		String className = getCompleteClassNameFromPackage(ctx, n.getName());
 		arianeLogger.logClassVisitBegin(className);
-		ctx.pushClassName(className);
+		ctx.pushClass(className);
 		try {
 
 			if(n.getImplements() != null) {
@@ -127,25 +166,35 @@ public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 			arianeLogger.logClassVisitEnd(className);
 		}
 		finally {
-			ctx.popClassName();
+			ctx.popClass();
 		}
 
 	}
 	
 	@Override
 	public void visit(ObjectCreationExpr n, VisitorContext ctx) {
-		System.out.println("ObjectCreationExpr:"+n.getType().getName());
+		Type t = jpf.getType(n);
+		String className = t.describe();
+		
+		ctx.pushClass(className);
+		
+		try  {
+			super.visit(n, ctx);
+		}
+		finally {
+			ctx.popClass();
+		}
 	}
 	
 	@Override
 	public void visit(com.github.javaparser.ast.body.MethodDeclaration n, VisitorContext ctx) {
-		ctx.currentMethodQualifiedName = getMethodQualifiedName(ctx, n);
+		ctx.getcurrentClass().currentMethodQualifiedName = getMethodQualifiedName(ctx, n);
 
 		try  {
 			super.visit(n, ctx);
 		}
 		finally {
-			ctx.currentMethodQualifiedName = null;
+			ctx.getcurrentClass().currentMethodQualifiedName = null;
 		}
 	}
 	
@@ -159,7 +208,7 @@ public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 			}
 			else {
 				String calleeQualifiedSignature = s.getCorrespondingDeclaration().getQualifiedSignature();
-				arianeLogger.logMethodCall(ctx.currentMethodQualifiedName, calleeQualifiedSignature);
+				arianeLogger.logMethodCall(ctx.getcurrentClass().currentMethodQualifiedName, calleeQualifiedSignature);
 			}
 		}
 		catch(Exception e) {

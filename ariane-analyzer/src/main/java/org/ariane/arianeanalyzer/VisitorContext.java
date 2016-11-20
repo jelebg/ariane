@@ -14,14 +14,24 @@ public class VisitorContext {
 	public String filename;
 	public CompilationUnit compilationUnit;
 	Map<String, String> imports;
-	List<String> classNameStack;
-	String currentMethodQualifiedName;
+	List<ClassContext> classStack;
 
+	public class ClassContext {
+		String name;
+		String currentMethodQualifiedName;
+		
+		public ClassContext(String name, String currentMethodQualifiedName) {
+			this.name = name;
+			this.currentMethodQualifiedName = currentMethodQualifiedName;
+		}
+		
+	}
+	
 	public VisitorContext(CompilationUnit compilationUnit, String filename) {
 		this.compilationUnit = compilationUnit;
 		this.filename = filename;
 		
-		classNameStack = new ArrayList<>();
+		classStack = new ArrayList<>();
 		imports = new HashMap<>();
 		if(compilationUnit.getImports() != null) {
 			for(ImportDeclaration importDeclaration : compilationUnit.getImports()) {
@@ -40,13 +50,13 @@ public class VisitorContext {
 		}
 	}
 
-	public void pushClassName(String className) {
-		classNameStack.add(className);
+	public void pushClass(String className) {
+		classStack.add(new ClassContext(className, null));
 	}
-	public void popClassName() {
-		classNameStack.remove(classNameStack.size()-1);
+	public void popClass() {
+		classStack.remove(classStack.size()-1);
 	}
-	public String getcurrentClassName() {
-		return classNameStack.get(classNameStack.size()-1);
+	public ClassContext getcurrentClass() {
+		return classStack.get(classStack.size()-1);
 	}
 }
