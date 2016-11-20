@@ -11,6 +11,7 @@ import com.github.javaparser.ast.PackageDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
@@ -129,6 +130,11 @@ public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 			ctx.popClassName();
 		}
 
+	}
+	
+	@Override
+	public void visit(ObjectCreationExpr n, VisitorContext ctx) {
+		System.out.println("ObjectCreationExpr:"+n.getType().getName());
 	}
 	
 	@Override

@@ -49,10 +49,6 @@ import me.tomassetti.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
 import me.tomassetti.symbolsolver.resolution.typesolvers.JreTypeSolver;*/
 
 
-/**
- * Hello world!
- *
- */
 public class ArianeAnalyzerMain 
 {
 	private static List<String> skipDirectories = null;
@@ -69,6 +65,10 @@ public class ArianeAnalyzerMain
 		Option sourceDir = new Option("s", "src", true, "source directory(ies)");
 		sourceDir.setRequired(true);
 		options.addOption(sourceDir);
+		
+		Option visitDir = new Option("v", "visit", true, "visit directory(ies)");
+		visitDir.setRequired(false);
+		options.addOption(visitDir);
 		
 		Option skipName = new Option("k", "skip", true, "skip name(s)");
 		skipName.setRequired(false);
@@ -93,8 +93,9 @@ public class ArianeAnalyzerMain
 		}
 		
 		String[] jarDirs  = cmd.getOptionValues("jar");
-		String[] srcs  = cmd.getOptionValues("src");
-		String[] skips = cmd.getOptionValues("skip");
+		String[] srcs     = cmd.getOptionValues("src");
+		String[] visits   = cmd.getOptionValues("visit");
+		String[] skips    = cmd.getOptionValues("skip");
 		String csvFilePrefix = cmd.getOptionValue("csv");
 		List<String> jars = new ArrayList<String>();
 		
@@ -116,18 +117,15 @@ public class ArianeAnalyzerMain
 			
 		}
 	        
-
 		typeSolver = new CombinedTypeSolver();
 		typeSolver.add(new JreTypeSolver());
-	    /*
-	    typeSolver.add(new JavaParserTypeSolver(new File("C:\\DEV\\javaparser\\arbo.neon\\javaparser\\src\\main\\java")));
-	    typeSolver.add(new JarTypeSolver("C:/Users/jean/.m2/repository/com/github/javaparser/java-symbol-solver-core/0.3.2/java-symbol-solver-core-0.3.2.jar"));
-	    typeSolver.add(new JarTypeSolver("C:/Users/jean/.m2/repository/com/github/javaparser/javaparser-core/3.0.0-alpha.6/javaparser-core-3.0.0-alpha.6.jar"));
-	    */
 		
 		for(String src : srcs) {
 			System.out.println("src:"+src);
 			typeSolver.add(new JavaParserTypeSolver(new File(src)));
+		}
+		if(visits == null) {
+			visits = srcs;
 		}
 		for(String jar : jars) {
 			System.out.println("jar:"+jar);
@@ -142,13 +140,13 @@ public class ArianeAnalyzerMain
 		
 		IArianeLogger logger = createLogger(csvFilePrefix);
 		logger.init();
-		for(String src : srcs) {
-			File f = new File(src);
+		for(String visit : visits) {
+			File f = new File(visit);
 			if(f.isDirectory()) {
-				visitDirectory(src, logger);
+				visitDirectory(visit, logger);
 			}
 			else {
-				visitFile(src, logger);
+				visitFile(visit, logger);
 			}
 		}
 		logger.end();
