@@ -9,6 +9,7 @@ import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.PackageDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.InitializerDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.ObjectCreationExpr;
@@ -107,6 +108,13 @@ public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 		return packageName+"."+className;
 	}
 	
+	public String getInitializerQualifiedName(VisitorContext ctx, InitializerDeclaration initializerDeclaration) {
+		// TODO : subclasses + classes anonymes
+		// TODO : generics
+		// TODO : nom différent pour initiliazer static ou pas ??
+		return ctx.getcurrentClass().name + ".<"+(initializerDeclaration.isStatic()?"static_init":"init>")+"()";
+	}
+	
 	public String getMethodQualifiedName(VisitorContext ctx, com.github.javaparser.ast.body.MethodDeclaration methodDeclaration) {
 		// TODO : subclasses + classes anonymes
 		// TODO : generics
@@ -198,6 +206,19 @@ public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 		}
 	}
 	
+	@Override
+	public void visit(InitializerDeclaration n, VisitorContext ctx) {
+		ctx.getcurrentClass().currentMethodQualifiedName = getInitializerQualifiedName(ctx, n);
+
+		try  {
+			super.visit(n, ctx);
+		}
+		finally {
+			ctx.getcurrentClass().currentMethodQualifiedName = null;
+		}
+
+	}
+
 	@Override
 	public void visit(MethodCallExpr n, VisitorContext ctx) {
 		super.visit(n, ctx);
