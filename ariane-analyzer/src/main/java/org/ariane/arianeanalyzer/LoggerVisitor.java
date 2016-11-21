@@ -9,6 +9,7 @@ import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.PackageDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.InitializerDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.expr.MethodCallExpr;
@@ -115,6 +116,31 @@ public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 		return ctx.getcurrentClass().name + ".<"+(initializerDeclaration.isStatic()?"static_init":"init>")+"()";
 	}
 	
+	public String getConstructorQualifiedName(VisitorContext ctx, ConstructorDeclaration constructorDeclaration) {
+		// TODO : subclasses + classes anonymes
+		// TODO : generics
+		StringBuilder sb = new StringBuilder();
+		sb.append(ctx.getcurrentClass().name);
+		sb.append(".");
+		sb.append(constructorDeclaration.getName());
+		sb.append("(");
+		if(constructorDeclaration.getParameters() != null) {
+			boolean first = true;
+			for(Parameter parameter : constructorDeclaration.getParameters()) {
+				if(!first) {
+					sb.append(",");
+				}
+				first = false;
+				String typeName = parameter.getType().toString();
+				// TODO : gerer les pacakges java.lang.*, javax.* ???
+				String fullTypeName = getCompleteClassNameFromImports(ctx, typeName);
+				sb.append(fullTypeName);
+			}
+		}
+		sb.append(")");
+		return sb.toString();
+	}
+	
 	public String getMethodQualifiedName(VisitorContext ctx, com.github.javaparser.ast.body.MethodDeclaration methodDeclaration) {
 		// TODO : subclasses + classes anonymes
 		// TODO : generics
@@ -216,9 +242,20 @@ public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 		finally {
 			ctx.getcurrentClass().currentMethodQualifiedName = null;
 		}
-
 	}
+	
+	@Override
+	public void visit(ConstructorDeclaration n, VisitorContext ctx) {
+		ctx.getcurrentClass().currentMethodQualifiedName = getConstructorQualifiedName(ctx, n);
 
+		try  {
+			super.visit(n, ctx);
+		}
+		finally {
+			ctx.getcurrentClass().currentMethodQualifiedName = null;
+		}
+	}
+	
 	@Override
 	public void visit(MethodCallExpr n, VisitorContext ctx) {
 		super.visit(n, ctx);
