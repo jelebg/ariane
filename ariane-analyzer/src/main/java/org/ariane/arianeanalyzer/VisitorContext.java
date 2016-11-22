@@ -59,4 +59,11 @@ public class VisitorContext {
 	public ClassContext getcurrentClass() {
 		return classStack.get(classStack.size()-1);
 	}
+	
+	public String getCompilationUnitPackage() {
+		if(compilationUnit.getPackage().isPresent()) {
+			return compilationUnit.getPackage().get().getPackageName();
+		}
+		return "";
+	}
 }

@@ -12,6 +12,7 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.InitializerDeclaration;
 import com.github.javaparser.ast.body.Parameter;
+import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
@@ -89,10 +90,7 @@ public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 
 	
 	public String getCompleteClassNameFromPackage(VisitorContext ctx, String className) {
-		String packageName = "";
-		if(ctx.compilationUnit.getPackage().isPresent()) {
-			packageName = ctx.compilationUnit.getPackage().get().getPackageName();
-		}
+		String packageName = ctx.getCompilationUnitPackage();
 		return packageName+"."+className;
 	}
 	
@@ -104,7 +102,7 @@ public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 		}
 		String packageName = ctx.imports.get(className);
 		if(packageName == null) {
-			return className;
+			return ctx.getCompilationUnitPackage()+"."+className;
 		}
 		return packageName+"."+className;
 	}
@@ -135,6 +133,32 @@ public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 				// TODO : gerer les pacakges java.lang.*, javax.* ???
 				String fullTypeName = getCompleteClassNameFromImports(ctx, typeName);
 				sb.append(fullTypeName);
+			}
+		}
+		sb.append(")");
+		return sb.toString();
+	}
+	
+	public String getConstructorQualifiedNameFromObjectCreationExpr(VisitorContext ctx, ObjectCreationExpr objectCreationExpr) {
+		// TODO : subclasses + classes anonymes
+		// TODO : generics
+		ClassOrInterfaceType type = objectCreationExpr.getType();
+		String className = getCompleteClassNameFromImports(ctx, type.getName());
+		StringBuilder sb = new StringBuilder();
+		sb.append(className);
+		sb.append(".");
+		sb.append(type.getName());
+		sb.append("(");
+		if(objectCreationExpr.getArgs() != null) {
+			boolean first = true;
+			for(Expression exp : objectCreationExpr.getArgs()) {
+				if(!first) {
+					sb.append(",");
+				}
+				first = false;
+				Type t2 = jpf.getType(exp);
+				String typeName = t2.describe();
+				sb.append(typeName);
 			}
 		}
 		sb.append(")");
@@ -209,6 +233,17 @@ public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 	public void visit(ObjectCreationExpr n, VisitorContext ctx) {
 		Type t = jpf.getType(n);
 		String className = t.describe();
+		
+		// object creation is like calling the constructor like a method
+		
+		String constructorQualifiedSignature = getConstructorQualifiedNameFromObjectCreationExpr(ctx, n);
+		
+		try {
+			arianeLogger.logMethodCall(ctx.getcurrentClass().currentMethodQualifiedName, constructorQualifiedSignature);
+		} catch (Exception e) {
+			// TODO pfff que faire pour ces exceptions
+			e.printStackTrace();
+		}
 		
 		ctx.pushClass(className);
 		
