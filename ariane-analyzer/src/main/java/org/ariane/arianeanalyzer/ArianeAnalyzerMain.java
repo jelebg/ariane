@@ -1,7 +1,6 @@
 package org.ariane.arianeanalyzer;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -26,28 +25,11 @@ import org.ariane.arianeanalyzer.loggers.ConsoleLogger;
 import org.ariane.arianeanalyzer.loggers.CsvLogger;
 import org.ariane.arianeanalyzer.loggers.IArianeLogger;
 
-import com.github.javaparser.JavaParser;
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.expr.MethodCallExpr;
-import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
-import com.github.javaparser.symbolsolver.model.declarations.MethodDeclaration;
-import com.github.javaparser.symbolsolver.model.resolution.SymbolReference;
-import com.github.javaparser.symbolsolver.model.resolution.TypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JarTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JreTypeSolver;
-
-/*import me.tomassetti.symbolsolver.javaparsermodel.JavaParserFacade;
-import me.tomassetti.symbolsolver.model.declarations.MethodDeclaration;
-import me.tomassetti.symbolsolver.model.resolution.SymbolReference;
-import me.tomassetti.symbolsolver.model.resolution.TypeSolver;
-import me.tomassetti.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
-import me.tomassetti.symbolsolver.resolution.typesolvers.JarTypeSolver;
-import me.tomassetti.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
-import me.tomassetti.symbolsolver.resolution.typesolvers.JreTypeSolver;*/
-
 
 public class ArianeAnalyzerMain 
 {
@@ -78,6 +60,10 @@ public class ArianeAnalyzerMain
 		csvName.setRequired(false);
 		options.addOption(csvName);
 		
+		Option unitTestingFlag = new Option("t", "unitTesting", false, "unit testing");
+		unitTestingFlag.setRequired(false);
+		options.addOption(unitTestingFlag);
+		
 		CommandLineParser parser = new DefaultParser();
 		HelpFormatter formatter = new HelpFormatter();
 		CommandLine cmd;
@@ -97,6 +83,7 @@ public class ArianeAnalyzerMain
 		String[] visits   = cmd.getOptionValues("visit");
 		String[] skips    = cmd.getOptionValues("skip");
 		String csvFilePrefix = cmd.getOptionValue("csv");
+		boolean unitTesting =cmd.hasOption("unitTesting");
 		List<String> jars = new ArrayList<String>();
 		
 		for(String str : jarDirs) {
@@ -143,10 +130,10 @@ public class ArianeAnalyzerMain
 		for(String visit : visits) {
 			File f = new File(visit);
 			if(f.isDirectory()) {
-				visitDirectory(visit, logger);
+				visitDirectory(visit, logger, unitTesting);
 			}
 			else {
-				visitFile(visit, logger);
+				visitFile(visit, logger, unitTesting);
 			}
 		}
 		logger.end();
@@ -164,11 +151,12 @@ public class ArianeAnalyzerMain
 		return new CsvLogger(nodesFile, relationsFile);
 	}
 	
-	public static void visitFile(String filename, IArianeLogger logger) throws IOException {
+	public static void visitFile(String filename, IArianeLogger logger, boolean unitTesting) throws IOException {
         try {
         	final JavaParserFacade jpf = JavaParserFacade.get(typeSolver);
-			LoggerVisitor visitor = new LoggerVisitor(logger, typeSolver);
+			LoggerVisitor visitor = unitTesting ? new UnitTestVisitor((ConsoleLogger) logger, typeSolver, false) : new LoggerVisitor(logger, typeSolver);
 			visitor.visitFile(filename);
+
 			
 	    } catch (Exception e) {
 	    	System.err.println("Exception while visiting file : " + filename);
@@ -176,7 +164,7 @@ public class ArianeAnalyzerMain
         } 
 	}
 	
-	public static void visitDirectory(String dir, IArianeLogger logger) throws IOException {
+	public static void visitDirectory(String dir, IArianeLogger logger, boolean unitTesting) throws IOException {
 		
 		Files.walkFileTree(Paths.get(dir), 
 				new FileVisitor<Path>() {
@@ -201,7 +189,7 @@ public class ArianeAnalyzerMain
 						}
 						
 						System.out.println("FILE "+file.toString());
-						ArianeAnalyzerMain.visitFile(file.toString(), logger);
+						ArianeAnalyzerMain.visitFile(file.toString(), logger, unitTesting);
 						return FileVisitResult.CONTINUE;
 					}
 
