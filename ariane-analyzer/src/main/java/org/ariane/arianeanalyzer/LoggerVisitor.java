@@ -233,13 +233,14 @@ public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 	public void visit(ObjectCreationExpr n, VisitorContext ctx) {
 		Type t = jpf.getType(n);
 		String className = t.describe();
+		boolean isAnonymous = n.getAnonymousClassBody().isPresent();
 		
 		// object creation is like calling the constructor like a method
 		
 		String constructorQualifiedSignature = getConstructorQualifiedNameFromObjectCreationExpr(ctx, n);
 		
 		try {
-			arianeLogger.logMethodCall(ctx.getcurrentClass().currentMethodQualifiedName, constructorQualifiedSignature);
+			arianeLogger.logMethodCall(ctx.getCurrentMethodQualidName(), constructorQualifiedSignature);
 		} catch (Exception e) {
 			// TODO pfff que faire pour ces exceptions
 			e.printStackTrace();

@@ -66,4 +66,17 @@ public class VisitorContext {
 		}
 		return "";
 	}
+	
+	public String getCurrentMethodQualidName() {
+		// on peut initialiser un contexte de class pour son instantiation alors qu'on est pas encore dans un méthode
+		// 1 seul cas à gérer : parametre du constructeur (Test4)
+		// les constructeurs statiques sont interdits dans les classes anonymes, donc ce cas n'est pas à gérer
+		for(int i=classStack.size()-1; i>=0; i--) {
+			ClassContext classContext = classStack.get(i);
+			if(classContext.currentMethodQualifiedName != null) {
+				return classContext.currentMethodQualifiedName;
+			}
+		}
+		return null;
+	}
 }
