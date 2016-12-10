@@ -17,11 +17,11 @@ public class Test1 {
 	}
 	
 	/*-Ariane
-	 CALL testpackage.Test1.test1() java.io.PrintStream.println(java.lang.String)
-	 CALL testpackage.Test1.test1() testpackage.Test1.getStr()
-	 CALL testpackage.Test1.test1() java.io.PrintStream.println(java.lang.String)
-	 CALL testpackage.Test1.test1() testpackage.Test1.getStr()
-	 CALL testpackage.Test1.test1() java.io.PrintStream.println(java.lang.String)
+	 CALL testpackage.ok.Test1.test1() java.io.PrintStream.println(java.lang.String)
+	 CALL testpackage.ok.Test1.test1() testpackage.ok.Test1.getStr()
+	 CALL testpackage.ok.Test1.test1() java.io.PrintStream.println(java.lang.String)
+	 CALL testpackage.ok.Test1.test1() testpackage.ok.Test1.getStr()
+	 CALL testpackage.ok.Test1.test1() java.io.PrintStream.println(java.lang.String)
 	 */
 	void test1() {
 		System.out.println(str);
@@ -30,9 +30,9 @@ public class Test1 {
 	}
 	
 	/*-Ariane
-	 CALL testpackage.Test1.test2() java.io.PrintStream.println(java.lang.String)
-	 CALL testpackage.Test1.test2() testpackage.Test1.getStr()
-	 CALL testpackage.Test1.test2() java.io.PrintStream.println(java.lang.String)
+	 CALL testpackage.ok.Test1.test2() java.io.PrintStream.println(java.lang.String)
+	 CALL testpackage.ok.Test1.test2() testpackage.ok.Test1.getStr()
+	 CALL testpackage.ok.Test1.test2() java.io.PrintStream.println(java.lang.String)
 	*/
 	public void test2() {
 		System.out.println(str);
@@ -40,15 +40,15 @@ public class Test1 {
 	}
 	
 	/*-Ariane
-	 CALL testpackage.Test1.test3() testpackage.Test1.getStrStatic()
-	 CALL testpackage.Test1.test3() testpackage.Test1.getStrStatic()
-	 CALL testpackage.Test1.test3() testpackage.Test1.getStrStatic()
-	 CALL testpackage.Test1.test3() testpackage.Test1.getStr()
-	 CALL testpackage.Test1.test3() testpackage.Test1.getStrStatic()
-	 CALL testpackage.Test1.test3() testpackage.Test1.getStr()
-	 CALL testpackage.Test1.test3() testpackage.Test1.getStrStatic()
-	 CALL testpackage.Test1.test3() testpackage.Test1.getStr()
-	 CALL testpackage.Test1.test3() testpackage.Test1.getStrStatic()
+	 CALL testpackage.ok.Test1.test3() testpackage.ok.Test1.getStrStatic()
+	 CALL testpackage.ok.Test1.test3() testpackage.ok.Test1.getStrStatic()
+	 CALL testpackage.ok.Test1.test3() testpackage.ok.Test1.getStrStatic()
+	 CALL testpackage.ok.Test1.test3() testpackage.ok.Test1.getStr()
+	 CALL testpackage.ok.Test1.test3() testpackage.ok.Test1.getStrStatic()
+	 CALL testpackage.ok.Test1.test3() testpackage.ok.Test1.getStr()
+	 CALL testpackage.ok.Test1.test3() testpackage.ok.Test1.getStrStatic()
+	 CALL testpackage.ok.Test1.test3() testpackage.ok.Test1.getStr()
+	 CALL testpackage.ok.Test1.test3() testpackage.ok.Test1.getStrStatic()
 	 */
 	public void test3() {
 		getStrStatic();
@@ -60,8 +60,8 @@ public class Test1 {
 	}
 
 	/*-Ariane
-     CALL testpackage.Test1.test4() testpackage.Test1.getStrStatic()
-	 CALL testpackage.Test1.test4() testpackage.Test1.getStrStatic()
+     CALL testpackage.ok.Test1.test4() testpackage.ok.Test1.getStrStatic()
+	 CALL testpackage.ok.Test1.test4() testpackage.ok.Test1.getStrStatic()
 	 */
 	public static void test4() {
 		getStrStatic();
