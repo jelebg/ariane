@@ -46,7 +46,7 @@ public class UnitTestVisitor extends LoggerVisitor {
 			String trimed = str.trim();
 			boolean removed = linesToHave.remove(trimed);
 			// test only if a CALL is unexpected. for others, do not care
-			if (!removed && trimed.startsWith("CALL")) {
+			if (!removed && (trimed.startsWith("CALL ") || trimed.startsWith("CALLBACK "))) {
 				System.out.println("!!! UNEXPECTED : "+str);
 			}
 			if(verbose) {

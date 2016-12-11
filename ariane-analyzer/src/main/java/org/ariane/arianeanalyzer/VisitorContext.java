@@ -19,10 +19,12 @@ public class VisitorContext {
 	public class ClassContext {
 		String name;
 		String currentMethodQualifiedName;
+		boolean isAnonymous;
 		
-		public ClassContext(String name, String currentMethodQualifiedName) {
+		public ClassContext(String name, String currentMethodQualifiedName, boolean isAnonymous) {
 			this.name = name;
 			this.currentMethodQualifiedName = currentMethodQualifiedName;
+			this.isAnonymous = isAnonymous;
 		}
 		
 	}
@@ -50,13 +52,13 @@ public class VisitorContext {
 		}
 	}
 
-	public void pushClass(String className) {
-		classStack.add(new ClassContext(className, null));
+	public void pushClass(String className, boolean anonymousClass) {
+		classStack.add(new ClassContext(className, null, anonymousClass));
 	}
 	public void popClass() {
 		classStack.remove(classStack.size()-1);
 	}
-	public ClassContext getcurrentClass() {
+	public ClassContext getCurrentClass() {
 		return classStack.get(classStack.size()-1);
 	}
 	
@@ -78,5 +80,19 @@ public class VisitorContext {
 			}
 		}
 		return null;
+	}
+	
+	public String getUpperCurrentMethodQualidName() {
+		// on peut initialiser un contexte de class pour son instantiation alors qu'on est pas encore dans un méthode
+		// 1 seul cas à gérer : parametre du constructeur (Test4)
+		// les constructeurs statiques sont interdits dans les classes anonymes, donc ce cas n'est pas à gérer
+		for(int i=classStack.size()-2; i>=0; i--) {
+			ClassContext classContext = classStack.get(i);
+			if(classContext.currentMethodQualifiedName != null) {
+				return classContext.currentMethodQualifiedName;
+			}
+		}
+		return null;
+
 	}
 }

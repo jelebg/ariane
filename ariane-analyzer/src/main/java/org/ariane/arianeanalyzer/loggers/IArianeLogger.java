@@ -9,4 +9,5 @@ public interface IArianeLogger {
 	void logClassVisitEnd(String className);
 	void logInheritence(String motherClassName, String childClassName) throws Exception;
 	void logMethodCall(String callerQualifiedSignature, String calleeQualifiedSignature) throws Exception;
+	void logCallback(String callerQualifiedSignature, String calleeQualifiedSignature) throws Exception;
 }

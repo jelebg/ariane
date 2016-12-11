@@ -111,14 +111,14 @@ public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 		// TODO : subclasses + classes anonymes
 		// TODO : generics
 		// TODO : nom différent pour initiliazer static ou pas ??
-		return ctx.getcurrentClass().name + ".<"+(initializerDeclaration.isStatic()?"static_init":"init>")+"()";
+		return ctx.getCurrentClass().name + ".<"+(initializerDeclaration.isStatic()?"static_init":"init>")+"()";
 	}
 	
 	public String getConstructorQualifiedName(VisitorContext ctx, ConstructorDeclaration constructorDeclaration) {
 		// TODO : subclasses + classes anonymes
 		// TODO : generics
 		StringBuilder sb = new StringBuilder();
-		sb.append(ctx.getcurrentClass().name);
+		sb.append(ctx.getCurrentClass().name);
 		sb.append(".");
 		sb.append(constructorDeclaration.getName());
 		sb.append("(");
@@ -169,7 +169,7 @@ public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 		// TODO : subclasses + classes anonymes
 		// TODO : generics
 		StringBuilder sb = new StringBuilder();
-		sb.append(ctx.getcurrentClass().name);
+		sb.append(ctx.getCurrentClass().name);
 		sb.append(".");
 		sb.append(methodDeclaration.getName());
 		sb.append("(");
@@ -194,7 +194,7 @@ public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 	public void visit(ClassOrInterfaceDeclaration n, VisitorContext ctx) {
 		String className = getCompleteClassNameFromPackage(ctx, n.getName());
 		arianeLogger.logClassVisitBegin(className);
-		ctx.pushClass(className);
+		ctx.pushClass(className, false);
 		try {
 
 			if(n.getImplements() != null) {
@@ -246,7 +246,7 @@ public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 			e.printStackTrace();
 		}
 		
-		ctx.pushClass(className);
+		ctx.pushClass(className, isAnonymous);
 		
 		try  {
 			super.visit(n, ctx);
@@ -258,37 +258,37 @@ public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 	
 	@Override
 	public void visit(com.github.javaparser.ast.body.MethodDeclaration n, VisitorContext ctx) {
-		ctx.getcurrentClass().currentMethodQualifiedName = getMethodQualifiedName(ctx, n);
+		ctx.getCurrentClass().currentMethodQualifiedName = getMethodQualifiedName(ctx, n);
 
 		try  {
 			super.visit(n, ctx);
 		}
 		finally {
-			ctx.getcurrentClass().currentMethodQualifiedName = null;
+			ctx.getCurrentClass().currentMethodQualifiedName = null;
 		}
 	}
 	
 	@Override
 	public void visit(InitializerDeclaration n, VisitorContext ctx) {
-		ctx.getcurrentClass().currentMethodQualifiedName = getInitializerQualifiedName(ctx, n);
+		ctx.getCurrentClass().currentMethodQualifiedName = getInitializerQualifiedName(ctx, n);
 
 		try  {
 			super.visit(n, ctx);
 		}
 		finally {
-			ctx.getcurrentClass().currentMethodQualifiedName = null;
+			ctx.getCurrentClass().currentMethodQualifiedName = null;
 		}
 	}
 	
 	@Override
 	public void visit(ConstructorDeclaration n, VisitorContext ctx) {
-		ctx.getcurrentClass().currentMethodQualifiedName = getConstructorQualifiedName(ctx, n);
+		ctx.getCurrentClass().currentMethodQualifiedName = getConstructorQualifiedName(ctx, n);
 
 		try  {
 			super.visit(n, ctx);
 		}
 		finally {
-			ctx.getcurrentClass().currentMethodQualifiedName = null;
+			ctx.getCurrentClass().currentMethodQualifiedName = null;
 		}
 	}
 	
@@ -302,7 +302,12 @@ public class LoggerVisitor extends VoidVisitorAdapter<VisitorContext> {
 			}
 			else {
 				String calleeQualifiedSignature = s.getCorrespondingDeclaration().getQualifiedSignature();
-				arianeLogger.logMethodCall(ctx.getcurrentClass().currentMethodQualifiedName, calleeQualifiedSignature);
+				arianeLogger.logMethodCall(ctx.getCurrentMethodQualidName(), calleeQualifiedSignature);
+				
+				if(ctx.getCurrentClass().isAnonymous) {
+					// ici on est dans le cas d'une classe anonyme créée pour faire une ou des callbacks
+					arianeLogger.logCallback(ctx.getUpperCurrentMethodQualidName(), calleeQualifiedSignature);
+				}
 			}
 		}
 		catch(Exception e) {

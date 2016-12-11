@@ -188,7 +188,6 @@ public class ArianeAnalyzerMain
 							return FileVisitResult.CONTINUE;
 						}
 						
-						System.out.println("FILE "+file.toString());
 						ArianeAnalyzerMain.visitFile(file.toString(), logger, unitTesting);
 						return FileVisitResult.CONTINUE;
 					}

@@ -49,6 +49,12 @@ public class ConsoleLogger implements IArianeLogger {
 		out.println("CALL "+callerQualifiedSignature+" "+calleeQualifiedSignature);
 		
 	}
+	
+	@Override
+	public void logCallback(String callerQualifiedSignature, String calleeQualifiedSignature) {
+		out.println("CALLBACK "+callerQualifiedSignature+" "+calleeQualifiedSignature);
+		
+	}
 
 	@Override
 	public void init() throws Exception {

@@ -17,6 +17,7 @@ public class CsvLogger implements IArianeLogger {
 	public static final String TYPE_CLASS = "CLASS";
 	public static final String TYPE_METHOD = "METHOD";
 	public static final String TYPE_CALL = "CALL";
+	public static final String TYPE_CALLBACK = "CALLBACK";
 	public static final String TYPE_INHERITENCE = "INHERITENCE";
 	public static final String TYPE_METHOD_OF_CLASS = "METHOD_OF_CLASS";
 	
@@ -24,6 +25,61 @@ public class CsvLogger implements IArianeLogger {
 	OutputStream relationsFile;
 	
 	Map<String, Node> nodes = new HashMap<>();
+	Set<Relation> relations = new HashSet<>();
+
+	public class Relation {
+		String type;
+		String from;
+		String to;
+
+		public Relation() {
+			
+		}
+		public Relation(String type, String from, String to) {
+			this.type = type;
+			this.from = from;
+			this.to = to;
+		}
+		
+		
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((to == null) ? 0 : to.hashCode());
+			result = prime * result + ((from == null) ? 0 : from.hashCode());
+			result = prime * result + ((type == null) ? 0 : type.hashCode());
+			return result;
+		}
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			Relation other = (Relation) obj;
+			if (to == null) {
+				if (other.to != null)
+					return false;
+			} else if (!to.equals(other.to))
+				return false;
+			if (from == null) {
+				if (other.from != null)
+					return false;
+			} else if (!from.equals(other.from))
+				return false;
+			if (type == null) {
+				if (other.type != null)
+					return false;
+			} else if (!type.equals(other.type))
+				return false;
+			return true;
+		}
+		
+	}
+	
 	public class Node {
 		String type;
 		String name;
@@ -107,6 +163,7 @@ public class CsvLogger implements IArianeLogger {
 	}
 	
 	private void printRelation(String type, String nodeFrom, String nodeTo) throws UnsupportedEncodingException, IOException {
+		relations.add(new Relation(type, nodeFrom, nodeTo));
 		StringBuilder sb = new StringBuilder();
 		sb.append(getCsvString(type));
 		sb.append(",");
@@ -115,6 +172,12 @@ public class CsvLogger implements IArianeLogger {
 		sb.append(getCsvString(nodeTo));
 		sb.append("\r\n");
 		relationsFile.write(sb.toString().getBytes(THE_CHARSET));
+	}
+	private void printRelationIfNotAlreadyPrinted(String type, String nodeFrom, String nodeTo) throws UnsupportedEncodingException, IOException {
+		if(relations.contains(new Relation(type, nodeFrom, nodeTo))) {
+			return;
+		}
+		printRelation(type, nodeFrom, nodeTo);
 	}
 
 	@Override
@@ -184,9 +247,28 @@ public class CsvLogger implements IArianeLogger {
 		printRelation(TYPE_CALL, callerQualifiedSignature, calleeQualifiedSignature);
 		
 		String callerClass = getClassNameFromMethod(callerQualifiedSignature);
-		String calleeClass = getClassNameFromMethod(callerQualifiedSignature);
-		printRelation(TYPE_METHOD_OF_CLASS, callerQualifiedSignature, callerClass);
-		printRelation(TYPE_METHOD_OF_CLASS, calleeQualifiedSignature, calleeClass);
+		String calleeClass = getClassNameFromMethod(calleeQualifiedSignature);
+		addNode(TYPE_CLASS, callerClass);
+		addNode(TYPE_CLASS, calleeClass);
+		printRelationIfNotAlreadyPrinted(TYPE_METHOD_OF_CLASS, callerQualifiedSignature, callerClass);
+		printRelationIfNotAlreadyPrinted(TYPE_METHOD_OF_CLASS, calleeQualifiedSignature, calleeClass);
+	}
+	
+	@Override
+	public void logCallback(String callerQualifiedSignature, String calleeQualifiedSignature) throws UnsupportedEncodingException, IOException {
+		callerQualifiedSignature = removeWhiteSpaces(callerQualifiedSignature);
+		calleeQualifiedSignature = removeWhiteSpaces(calleeQualifiedSignature);
+		
+		addNode(TYPE_METHOD, callerQualifiedSignature);
+		addNode(TYPE_METHOD, calleeQualifiedSignature);
+		printRelation(TYPE_CALLBACK, callerQualifiedSignature, calleeQualifiedSignature);
+		
+		String callerClass = getClassNameFromMethod(callerQualifiedSignature);
+		String calleeClass = getClassNameFromMethod(calleeQualifiedSignature);
+		addNode(TYPE_CLASS, callerClass);
+		addNode(TYPE_CLASS, calleeClass);
+		printRelationIfNotAlreadyPrinted(TYPE_METHOD_OF_CLASS, callerQualifiedSignature, callerClass);
+		printRelationIfNotAlreadyPrinted(TYPE_METHOD_OF_CLASS, calleeQualifiedSignature, calleeClass);
 	}
 	
 	
