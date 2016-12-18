@@ -24,6 +24,7 @@ import org.apache.commons.cli.ParseException;
 import org.ariane.arianeanalyzer.loggers.ConsoleLogger;
 import org.ariane.arianeanalyzer.loggers.CsvLogger;
 import org.ariane.arianeanalyzer.loggers.IArianeLogger;
+import org.ariane.arianeanalyzer.loggers.Neo4jLogger;
 
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
@@ -56,13 +57,13 @@ public class ArianeAnalyzerMain
 		skipName.setRequired(false);
 		options.addOption(skipName);
 		
-		Option csvName = new Option("c", "csv", true, "csv output nodes and relations files prefixes");
-		csvName.setRequired(false);
-		options.addOption(csvName);
+		Option outputName = new Option("o", "output", true, "ouput connectors : stdout(default), unitTesting, csv, neo4j");
+		outputName.setRequired(false);
+		options.addOption(outputName);
 		
-		Option unitTestingFlag = new Option("t", "unitTesting", false, "unit testing");
-		unitTestingFlag.setRequired(false);
-		options.addOption(unitTestingFlag);
+		Option outputInfosName = new Option("i", "outputInformations", true, "csv output nodes and relations files prefixes");
+		outputInfosName.setRequired(false);
+		options.addOption(outputInfosName);
 		
 		CommandLineParser parser = new DefaultParser();
 		HelpFormatter formatter = new HelpFormatter();
@@ -82,8 +83,11 @@ public class ArianeAnalyzerMain
 		String[] srcs     = cmd.getOptionValues("src");
 		String[] visits   = cmd.getOptionValues("visit");
 		String[] skips    = cmd.getOptionValues("skip");
-		String csvFilePrefix = cmd.getOptionValue("csv");
-		boolean unitTesting =cmd.hasOption("unitTesting");
+		
+		String output = cmd.getOptionValue("output", "stdout");
+		String outputInformations = cmd.getOptionValue("outputInformations");
+		boolean unitTesting = "unitTesting".equals(output);
+		
 		List<String> jars = new ArrayList<String>();
 		
 		for(String str : jarDirs) {
@@ -125,7 +129,7 @@ public class ArianeAnalyzerMain
 			skipDirectories = Arrays.asList(skips);
 		}
 		
-		IArianeLogger logger = createLogger(csvFilePrefix);
+		IArianeLogger logger = createLogger(output, outputInformations);
 		logger.init();
 		for(String visit : visits) {
 			File f = new File(visit);
@@ -140,15 +144,26 @@ public class ArianeAnalyzerMain
 
     }
 	
-	public static IArianeLogger createLogger(String csvPrefix) throws FileNotFoundException {
-		if(csvPrefix == null) {
+	public static IArianeLogger createLogger(String output, String outputInformations) throws FileNotFoundException {
+		switch(output) {
+		// TODO : constantes
+		case "stdout" :
+		case "unitTesting" :		
 			return new ConsoleLogger();
+		
+		case "csv" :
+			File nodesFile = new File(outputInformations+".nodes.csv");
+			File relationsFile = new File(outputInformations+".relations.csv");
+			return new CsvLogger(nodesFile, relationsFile);
+			
+		case "neo4j" :
+			String[] splt = outputInformations.split(":");
+			return new Neo4jLogger(splt[0], splt[1], splt[2], splt[3]);
+			
+		default :
+			throw new RuntimeException("wrong output format : "+output);
 		}
 		
-		File nodesFile = new File(csvPrefix+".nodes.csv");
-		File relationsFile = new File(csvPrefix+".relations.csv");
-		
-		return new CsvLogger(nodesFile, relationsFile);
 	}
 	
 	public static void visitFile(String filename, IArianeLogger logger, boolean unitTesting) throws IOException {
